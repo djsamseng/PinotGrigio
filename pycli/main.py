@@ -1,35 +1,46 @@
-import cv2
+import argparse
+import asyncio
 
-RPI_URL = "http://192.168.1.80"
-RPI_LEFT_CAMERA = RPI_URL + ":8086/?action=stream"
-RPI_RIGHT_CAMERA = RPI_URL + ":8085/?action=stream"
+import connection_managers
+import joystick_managers
 
-def grab_video_stream(cap, name):
-    ret, frame = cap.read()
-    cv2.imshow(name, frame)
-    cv2.waitKey(5)
-    return frame
-
-def main():
-    cap_left = cv2.VideoCapture(RPI_LEFT_CAMERA)
-    cap_right = cv2.VideoCapture(RPI_RIGHT_CAMERA)
-    # TODO https://albertarmea.com/post/opencv-stereo-camera/#calibrating-the-cameras
-    stereo = cv2.StereoBM_create()
+async def main():
+    args = parse_args()
+    video_stream_manager = connection_managers.VideoStreamManager(args.rpi_url)
+    joystick_manager = joystick_managers.JoystickManager()
+    socketio_manager = connection_managers.SocketIOManager(joystick_manager=joystick_manager)
+    await socketio_manager.connect_sio()
     while True:
-        left_frame = grab_video_stream(cap_left, "Left")
-        right_frame = grab_video_stream(cap_right, "Right")
-        if left_frame is not None and right_frame is not None:
-            gray_left = cv2.cvtColor(left_frame, cv2.COLOR_BGR2GRAY)
-            gray_right = cv2.cvtColor(right_frame, cv2.COLOR_BGR2GRAY)
-            disparity = stereo.compute(gray_left, gray_right)
-            cv2.imshow("Disparity", disparity / 2048)
-            cv2.waitKey(5)
-        else:
-            print("No Frame!")
+        await socketio_manager.tick(0.001)
+        video_stream_manager.tick()
 
 
-    cap1.release()
-    cap2.release()
+    video_stream_manager.destroy()
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Compute platform")
+    parser.add_argument(
+        "rpi_url",
+        default="http://192.168.95",
+        help="Url of the raspberry pi"
+    )
+    return parser.parse_args()
+
+async def close():
+    await asyncio.sleep(0.1)
 
 if __name__ == "__main__":
-    main()
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(
+            main()
+        )
+    except KeyboardInterrupt as e:
+        print("Keyboard Interrupt")
+    finally:
+        print("Cleaning up")
+        loop.run_until_complete(
+            close()
+        )
+
+        print("Exiting")
