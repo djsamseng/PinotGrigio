@@ -4,8 +4,13 @@ import asyncio
 import socketio
 
 class SocketIOManager():
-    def __init__(self):
+    def __init__(
+            self,
+            servo_manager=None,
+            motor_manager=None):
         self.sio = socketio.AsyncClient()
+        self.servo_manager = servo_manager
+        self.motor_manager = motor_manager
         self.__hookup_sio()
 
     async def connect_sio(self, url):
@@ -22,3 +27,6 @@ class SocketIOManager():
         @sio.on("motor")
         async def on_motor(data):
             print("Received on_motor:", data)
+            if self.servo_manager is not None:
+                self.servo_manager.look_right(data["pan_right"])
+                self.servo_manager.look_down(data["pan_down"])

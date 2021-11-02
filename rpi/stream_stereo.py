@@ -4,6 +4,7 @@ from multiprocessing import Process
 import subprocess
 
 import connection_managers
+import robot_managers
 
 SERVER_URL = "http://192.168.1.220:4000"
 
@@ -19,11 +20,15 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Raspberry Pi Controller")
     parser.add_argument(
             "vd1",
+            nargs="?",
+            const="/dev/video0",
             default="/dev/video0",
-            help="Video device 1 (ex: /dev/video1)")
+            help="Video device 1 (ex: /dev/video0)")
     parser.add_argument(
-            "vd2", 
-            default="/dev/video1",
+            "vd2",
+            nargs="?",
+            const="/dev/video2",
+            default="/dev/video2",
             help="Video device 2 (ex: /dev/video2)")
     return parser.parse_args()
 
@@ -34,7 +39,12 @@ async def main():
     p1.start()
     p2.start()
 
-    socketio_manager = connection_managers.SocketIOManager()
+    servo_manager = robot_managers.ServoManager()
+    motor_manager = robot_managers.MotorManager()
+    socketio_manager = connection_managers.SocketIOManager(
+            servo_manager=servo_manager,
+            motor_manager=motor_manager
+    )
     await socketio_manager.connect_sio(SERVER_URL)
     while True:
         await socketio_manager.tick(0.001)
