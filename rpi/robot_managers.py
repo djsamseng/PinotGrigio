@@ -23,7 +23,9 @@ class ServoManager():
 
 class MotorManager():
     def __init__(self):
-        pass
+        self.motor_controller = Motor()
+    def set_motors(self, left, right):
+        self.motor_controller.setMotorModel(left, left, right, right)
 
 
 class PCA9685:

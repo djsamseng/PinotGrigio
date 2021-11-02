@@ -30,3 +30,7 @@ class SocketIOManager():
             if self.servo_manager is not None:
                 self.servo_manager.look_right(data["pan_right"])
                 self.servo_manager.look_down(data["pan_down"])
+            if self.motor_manager is not None:
+                self.motor_manager.set_motors(data["left"], data["right"])
+
+
