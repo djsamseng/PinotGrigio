@@ -6,7 +6,7 @@ throttle = 255//2
 joystick_right = 1020/2
 joystick_down = 1020/2
 joystick_pan_right = 90
-joystick_pan_down = 90
+joystick_pan_down = 120
 def get_joystick_data():
     global throttle
     global joystick_right

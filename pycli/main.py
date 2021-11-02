@@ -21,7 +21,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Compute platform")
     parser.add_argument(
         "rpi_url",
-        default="http://192.168.95",
+        nargs="?",
+        const="http://192.168.1.112",
+        default="http://192.168.1.112",
         help="Url of the raspberry pi"
     )
     return parser.parse_args()
