@@ -7,21 +7,34 @@ import numpy as np
 import os
 import pyaudio
 from scipy.io import wavfile
+import urllib.request, urllib.error
 
 class VideoStreamManager():
     def __init__(self, rpi_url) -> None:
-        self.cap_left = cv2.VideoCapture(rpi_url + ":8086/?action=stream")
-        self.cap_right = cv2.VideoCapture(rpi_url + ":8085/?action=stream")
+        self.rpi_url = rpi_url
+        self.cap_left = None
+        self.cap_right = None
+        self.__try_connect()
         # TODO https://albertarmea.com/post/opencv-stereo-camera/#calibrating-the-cameras
         self.stereo = cv2.StereoBM_create()
 
     def destroy(self):
-        self.cap_left.release()
-        self.cap_right.release()
+        if self.cap_left is not None:
+            self.cap_left.release()
+        if self.cap_right is not None:
+            self.cap_right.release()
 
     def tick(self):
+        if self.cap_left is None or self.cap_right is None:
+            self.__try_connect()
+            return
+
         left_frame = self.__grab_video_stream(self.cap_left)
         right_frame = self.__grab_video_stream(self.cap_right)
+        if left_frame is None or right_frame is None:
+            self.__try_connect()
+            return
+
         cv2.imshow("Left", left_frame)
         cv2.imshow("Right", right_frame)
         if left_frame is not None and right_frame is not None:
@@ -30,6 +43,18 @@ class VideoStreamManager():
             disparity = self.stereo.compute(gray_left, gray_right)
             cv2.imshow("Disparity", disparity / 2048)
             cv2.waitKey(5)
+
+    def __try_connect(self):
+        cap_left_url = self.rpi_url + ":8086/?action=stream"
+        cap_right_url = self.rpi_url + ":8085/?action=stream"
+        try:
+            res = urllib.request.urlopen(cap_left_url)
+        except urllib.error.URLError:
+            return
+        if res.getcode() != 200:
+            return
+        self.cap_left = cv2.VideoCapture(cap_left_url)
+        self.cap_right = cv2.VideoCapture(cap_right_url)
 
     def __grab_video_stream(self, cap):
         ret, frame = cap.read()

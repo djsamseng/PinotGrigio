@@ -27,6 +27,7 @@ def get_joystick_data():
 
     for evt in events:
         if evt.code == THROTTLE:
+            # unused
             throttle = 255//2 - evt.state
         elif evt.code == JOYSTICK_RIGHT:
             joystick_right = evt.state
@@ -39,10 +40,11 @@ def get_joystick_data():
             if evt.state == -1 or evt.state == 1:
                 joystick_pan_down += evt.state * JOYSTICK_PAN_MULT
     
-    left_motor = 0
-    right_motor = 0
-    right_motor = throttle + int(throttle * (1020/2 - joystick_right) / 1020)
-    left_motor = throttle + int(throttle * (joystick_right - 1020/2) / 1020)
+    max_motor = 2000
+    forward = max_motor - int(joystick_down * max_motor/1020) * 2 # -2000,2000
+    right_ratio = min(joystick_right / 1020, 1) # 0,1
+    left_motor = int(forward * right_ratio)
+    right_motor = int(forward * (1-right_ratio))
     data = {
         "left": left_motor,
         "right": right_motor,
