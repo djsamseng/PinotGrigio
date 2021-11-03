@@ -3,6 +3,7 @@ import asyncio
 from multiprocessing import Process
 import subprocess
 
+import audio_managers
 import connection_managers
 import robot_managers
 
@@ -41,9 +42,11 @@ async def main():
 
     servo_manager = robot_managers.ServoManager()
     motor_manager = robot_managers.MotorManager()
+    audio_manager = audio_managers.AudioManager()
     socketio_manager = connection_managers.SocketIOManager(
             servo_manager=servo_manager,
-            motor_manager=motor_manager
+            motor_manager=motor_manager,
+            audio_manager=audio_manager,
     )
     await socketio_manager.connect_sio(SERVER_URL)
     while True:

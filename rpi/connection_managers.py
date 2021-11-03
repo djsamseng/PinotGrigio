@@ -7,10 +7,12 @@ class SocketIOManager():
     def __init__(
             self,
             servo_manager=None,
-            motor_manager=None):
+            motor_manager=None,
+            audio_manager=None):
         self.sio = socketio.AsyncClient()
         self.servo_manager = servo_manager
         self.motor_manager = motor_manager
+        self.audio_manager = audio_manager
         self.__hookup_sio()
 
     async def connect_sio(self, url):
@@ -21,6 +23,7 @@ class SocketIOManager():
 
     async def tick(self, sleep_interval):
         await self.sio.sleep(sleep_interval)
+        await self.__audio_tick()
 
     def __hookup_sio(self):
         sio = self.sio
@@ -32,5 +35,13 @@ class SocketIOManager():
                 self.servo_manager.look_down(data["pan_down"])
             if self.motor_manager is not None:
                 self.motor_manager.set_motors(data["left"], data["right"])
+
+    async def __audio_tick(self):
+        if self.audio_manager is None:
+            return
+
+        audio_data = self.audio_manager.tick()
+        if len(audio_data) > 0:
+            await self.sio.emit("rpiaudio", audio_data)
 
 
