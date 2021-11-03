@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 
+import audio_managers
 import connection_managers
 import joystick_managers
 
@@ -8,7 +9,12 @@ async def main():
     args = parse_args()
     video_stream_manager = connection_managers.VideoStreamManager(args.rpi_url)
     joystick_manager = joystick_managers.JoystickManager()
-    socketio_manager = connection_managers.SocketIOManager(joystick_manager=joystick_manager)
+    audio_manager = audio_managers.AudioManager()
+    socketio_manager = connection_managers.SocketIOManager(
+        joystick_manager=joystick_manager,
+        audio_manager=audio_manager,
+        register_for_rpi_audio=True
+    )
     await socketio_manager.connect_sio()
     while True:
         await socketio_manager.tick(0.001)

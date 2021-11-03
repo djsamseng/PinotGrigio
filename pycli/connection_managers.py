@@ -65,11 +65,15 @@ class SocketIOManager():
     def __init__(
         self, 
         joystick_manager=None,
+        audio_manager=None,
+        register_for_rpi_audio=False,
         register_for_audio_data=False,
         register_for_brain_control=False
     ) -> None:
         self.sio = socketio.AsyncClient()
         self.joystick_manager = joystick_manager
+        self.audio_manager = audio_manager
+        self.register_for_rpi_audio = register_for_rpi_audio
         self.register_for_audio_data = register_for_audio_data
         self.register_for_brain_control = register_for_brain_control
         self.__hookup_sio()
@@ -78,6 +82,8 @@ class SocketIOManager():
         await self.sio.connect("http://localhost:4000")
         room = "foo"
         await self.sio.emit("create or join", room)
+        if self.register_for_rpi_audio:
+            await self.sio.emit("registerForRpiAudio")
         if self.register_for_audio_data:
             await self.sio.emit("registerForAudioData")
         if self.register_for_brain_control:
@@ -105,6 +111,12 @@ class SocketIOManager():
                     self.webrtc_manager.audio_replay_track.openWave(filename)
                 else:
                     print("Cannot speak: no file")
+
+        @sio.on("rpiaudio")
+        async def on_rpi_audio(data):
+            if self.audio_manager is not None:
+                print("RPI:", data)
+                self.audio_manager.tick(data)
 
         @sio.on("audiodata")
         async def on_audio_data(data):

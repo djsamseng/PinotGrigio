@@ -90,6 +90,12 @@ io.on("connection", (socket) => {
     socket.on("audiodata", (data) => {
         io.sockets.in("audiodata").emit("audiodata", data);
     });
+    socket.on("registerForRpiAudio", () => {
+        socket.join("rpiaudio");
+    });
+    socket.on("rpiaudio", (data) => {
+        io.sockets.in("rpiaudio").emit("rpiaudio", data);
+    });
 
     // Control data
     socket.on("registerForBrainControl", () => {
