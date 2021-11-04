@@ -96,6 +96,12 @@ io.on("connection", (socket) => {
     socket.on("rpiaudio", (data) => {
         io.sockets.in("rpiaudio").emit("rpiaudio", data);
     });
+    socket.on("registerForPlayAudio", () => {
+        socket.join("playaudio");
+    });
+    socket.on("playaudio", (data) => {
+        io.sockets.in("playaudio").emit("playaudio", data);
+    });
 
     // Control data
     socket.on("registerForBrainControl", () => {

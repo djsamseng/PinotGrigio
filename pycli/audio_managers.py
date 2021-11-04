@@ -18,7 +18,8 @@ class AudioPlayer():
             rate=RESPEAKER_RATE,
             format=self.p.get_format_from_width(RESPEAKER_WIDTH),
             channels=RESPEAKER_CHANNELS,
-            output=True
+            input=True,
+            output=True,
         )
 
     def __find_respeaker_index(self):
@@ -33,7 +34,9 @@ class AudioPlayer():
                 print("Device:", device_name, "host_idx", host_idx, "device_idx:", i, "Max channels:", maxChannels)
 
     def tick(self, play_chunk):
+        data = self.stream.read(CHUNK)
         self.stream.write(play_chunk, CHUNK)
+        return data
 
 class AudioRecorderP2():
     def __init__(self) -> None:
@@ -78,24 +81,32 @@ def test_audio_recorder():
     while True:
         audio_recorder.tick()
 
-def play_p2(queue):
+def play_p2(play_queue, record_queue):
     audio_player = AudioPlayer()
     audio_player.open_stream()
     while True:
         time.sleep(0.0001)
-        if not queue.empty():
-            data = queue.get()
-            audio_player.tick(data)
+        if not play_queue.empty():
+            data = play_queue.get()
+            record_data = audio_player.tick(data)
+            record_queue.put(record_data)
 
 class AudioManager():
     def __init__(self) -> None:
         self.queue = Queue()
-        self.process = Process(target=play_p2, args=(self.queue,))
+        self.record_queue = Queue()
+        self.process = Process(target=play_p2, args=(self.queue, self.record_queue))
         self.process.start()
 
     def tick(self, play_data):
         for chunk in play_data:
             self.queue.put(chunk)
+        frames = []
+        while not self.record_queue.empty():
+            data = self.record_queue.get()
+            if data is not None:
+                frames.append(data)
+        return frames
 
 if __name__ == "__main__":
     test_audio_recorder()

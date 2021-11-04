@@ -115,8 +115,9 @@ class SocketIOManager():
         @sio.on("rpiaudio")
         async def on_rpi_audio(data):
             if self.audio_manager is not None:
-                print("RPI:", data)
-                self.audio_manager.tick(data)
+                record_data = self.audio_manager.tick(data)
+                if len(record_data) > 0:
+                    await self.sio.emit("playaudio", record_data)
 
         @sio.on("audiodata")
         async def on_audio_data(data):
