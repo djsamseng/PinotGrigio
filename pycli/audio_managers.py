@@ -50,6 +50,8 @@ def play_p2(play_queue, record_queue):
     while True:
         time.sleep(0.0001)
         data = None
+        if play_queue.qsize() > 5:
+            print("play_queue too large:", play_queue.qsize())
         if not play_queue.empty():
             data = play_queue.get()
         record_data = audio_player.tick(data)
