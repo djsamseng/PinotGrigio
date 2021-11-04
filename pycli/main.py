@@ -17,7 +17,7 @@ async def main():
     )
     await socketio_manager.connect_sio()
     while True:
-        await socketio_manager.tick(0.001)
+        await socketio_manager.tick(0.0001)
         video_stream_manager.tick()
 
 

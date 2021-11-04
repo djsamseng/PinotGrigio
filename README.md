@@ -46,3 +46,8 @@ $ pkill -9 mjpg_streamer # sometimes needed to fully close and unlock the camera
 $ python3 main.py # python 3.8.10
 $ pkill -9 python3 # sometimes needed to fully close and unlock the camera
 ```
+
+## ODAS
+1. Launch the odas webclient on the PC `$ cd odas_web && npm start`
+2. Set odas.cfg on the rpi to have the url of the pc running the webclient
+3. Launch odaslive on the rpi `$ cd bin && ./odaslive -c odas.cfg

@@ -95,6 +95,7 @@ class SocketIOManager():
         if joystick_data is not None:
             print("Emit motor:", joystick_data)
             await self.sio.emit("motor", joystick_data)
+        await self.__audio_tick()
 
     def __hookup_sio(self):
         sio = self.sio
@@ -115,9 +116,8 @@ class SocketIOManager():
         @sio.on("rpiaudio")
         async def on_rpi_audio(data):
             if self.audio_manager is not None:
-                record_data = self.audio_manager.tick(data)
-                if len(record_data) > 0:
-                    await self.sio.emit("playaudio", record_data)
+                self.audio_manager.put_play_data(data)
+                
 
         @sio.on("audiodata")
         async def on_audio_data(data):
@@ -144,3 +144,8 @@ class SocketIOManager():
             data = cv2.imdecode(data, flags=cv2.IMREAD_COLOR)
             cv2.imshow("frame", data)
             cv2.waitKey(5)
+
+    async def __audio_tick(self):
+        record_data = self.audio_manager.tick()
+        if len(record_data) > 0:
+            await self.sio.emit("playaudio", record_data)
