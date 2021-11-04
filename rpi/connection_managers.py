@@ -20,6 +20,7 @@ class SocketIOManager():
         room = "foo"
         await self.sio.emit("create or join", room)
         await self.sio.emit("registerForMotorControl")
+        await self.sio.emit("registerForPlayAudio")
 
     async def tick(self, sleep_interval):
         await self.sio.sleep(sleep_interval)
@@ -35,6 +36,11 @@ class SocketIOManager():
                 self.servo_manager.look_down(data["pan_down"])
             if self.motor_manager is not None:
                 self.motor_manager.set_motors(data["left"], data["right"])
+
+        @sio.on("playaudio")
+        async def on_playaudio(data):
+            if self.audio_manager is not None:
+                self.audio_manager.put_play_data(data)
 
     async def __audio_tick(self):
         if self.audio_manager is None:

@@ -20,6 +20,7 @@ class AudioRecorderP2():
             format=self.p.get_format_from_width(RESPEAKER_WIDTH),
             channels=RESPEAKER_CHANNELS,
             input=True,
+            output=True,
         )
         return True
     
@@ -35,8 +36,10 @@ class AudioRecorderP2():
 
         return None
 
-    def tick(self):
+    def tick(self, play_data=None):
         data = self.stream.read(CHUNK)
+        if play_data is not None:
+            self.stream.write(play_data, CHUNK)
         return data
 
 def test_audio_recorder():
@@ -45,7 +48,7 @@ def test_audio_recorder():
     while True:
         data = audio_recorder.tick()
 
-def record_p2(queue):
+def record_p2(queue, play_queue):
     audio_recorder = AudioRecorderP2()
     did_open = audio_recorder.open_stream()
     if not did_open:
@@ -53,13 +56,17 @@ def record_p2(queue):
         return
 
     while True:
-        data = audio_recorder.tick()
+        play_data = None
+        if not play_queue.empty():
+            play_data = play_queue.get()
+        data = audio_recorder.tick(play_data)
         queue.put(data)
 
 class AudioManager():
     def __init__(self):
         self.queue = Queue()
-        self.process = Process(target=record_p2, args=(self.queue,))
+        self.play_queue = Queue()
+        self.process = Process(target=record_p2, args=(self.queue, self.play_queue))
         self.process.start()
 
     
@@ -70,6 +77,10 @@ class AudioManager():
             if data is not None:
                 frames.append(data)
         return frames
+
+    def put_play_data(self, play_data):
+        for chunk in play_data:
+            self.play_queue.put(chunk)
 
 
 if __name__ == "__main__":
