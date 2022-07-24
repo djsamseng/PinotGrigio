@@ -50,7 +50,7 @@ async def main():
     )
     await socketio_manager.connect_sio(SERVER_URL)
     while True:
-        await socketio_manager.tick(0.001)
+        await socketio_manager.tick(0.1)
     p1.join()
     p2.join()
 
