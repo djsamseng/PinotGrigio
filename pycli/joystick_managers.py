@@ -2,6 +2,8 @@
 from inputs import get_gamepad
 import multiprocessing
 
+from pocketsphinx import LiveSpeech
+
 throttle = 255//2
 joystick_right = 1020/2
 joystick_down = 1020/2
@@ -54,7 +56,44 @@ def get_joystick_data():
     return data
 
 def get_joystick_p2(joystick_queue):
+    speech = LiveSpeech(lm=False, kws='../rpi/keywords.list', dic='../rpi/keywords.dic')
     while True:
+        if True:
+            amt = 600
+            adiff = 250
+            data = {
+                "left": 0,
+                "right": 0,
+                "pan_right": joystick_pan_right,
+                "pan_down": joystick_pan_down
+            }
+            for phrase in speech:
+                for segment in phrase.segments():
+                    w = segment.strip(' ')
+                    print('-{0}-'.format(w))
+                    if w == "RIGHT":
+                        val = amt+adiff
+                        data["left"] = val
+                        data["right"] = -val
+                        joystick_queue.put_nowait(data)
+                    elif w == "LEFT":
+                        val = amt + adiff
+                        data["left"] = -val
+                        data["right"] = val
+                        joystick_queue.put_nowait(data)
+                    elif w == "FORWARD":
+                        data["left"] = amt
+                        data["right"] = amt
+                        joystick_queue.put_nowait(data)
+                    elif w == "BACK":
+                        data["left"] = -amt
+                        data["right"] = -amt
+                        joystick_queue.put_nowait(data)
+                    elif w == "STOP":
+                        data["left"] = 0
+                        data["right"] = 0
+                        joystick_queue.put_nowait(data)
+                        break
         joystick_data = get_joystick_data()
         joystick_queue.put_nowait(joystick_data)
 
