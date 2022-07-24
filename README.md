@@ -26,9 +26,32 @@ $ make
 $ sudo make install
 ```
 
+```bash
+sudo apt-get install python3-pyaudio
+cd rpi
+pip3 install -r requirements.txt
+```
+
 ## Run
 
 ### raspberry pi
+### Easy
+```bash
+cd rpi
+python3 stream_stereo.py
+```
+
+### Manual
+#### Audio RTP/UDP (faster)
+On the receiver PC `ifconfig -a | grep 192` -> 192.168.220
+On sender PC `ffmpeg -ac 6 -f alsa -i hw:1,0 -acodec mp2 -ab 32k -ac 1 -f rtp rtp://192.168.1.220:5002`
+On receiver PC `ffplay -fflags -nobuffer -probesize 32 rtp://192.168.1.220:5002`
+#### Audio TCP (lossless)
+On the sender PC `ifconfig -a | grep 192` -> 192.168.1.73
+```bash
+ffmpeg -ac 6 -f alsa -i hw:1,0 -acodec mp2 -ab 32k -ac 1 -f wav -listen 1 tcp://192.168.1.73:5002
+```
+#### Webcam
 ```bash
 $ /usr/local/bin/mjpg_streamer -i "/usr/local/lib/mjpg-streamer/input_uvc.so -d /dev/video0 -n -f 10 -r 1280x720" -o "/usr/local/lib/mjpg-streamer/output_http.so -p 8085 -w /usr/local/share/mjpg-streamer/www"
 ```

@@ -29,8 +29,9 @@ class VideoStreamManager():
             self.__try_connect()
             return
 
-        left_frame = self.__grab_video_stream(self.cap_left)
-        right_frame = self.__grab_video_stream(self.cap_right)
+        [left_frame, right_frame] = self.__grab_video_stream_parallel([self.cap_left, self.cap_right])
+        #left_frame = self.__grab_video_stream(self.cap_left)
+        #right_frame = self.__grab_video_stream(self.cap_right)
         if left_frame is None or right_frame is None:
             self.__try_connect()
             return
@@ -57,13 +58,23 @@ class VideoStreamManager():
         self.cap_right = cv2.VideoCapture(cap_right_url)
 
     def __grab_video_stream(self, cap):
+        # 720, 1280, 3
         ret, frame = cap.read()
         return frame
+
+    def __grab_video_stream_parallel(self, caps):
+        for cap in caps:
+            cap.grab()
+        frames = []
+        for cap in caps:
+            ret, frame = cap.retrieve()
+            frames.append(frame)
+        return frames
 
 
 class SocketIOManager():
     def __init__(
-        self, 
+        self,
         joystick_manager=None,
         audio_manager=None,
         register_for_rpi_audio=False,
@@ -77,7 +88,7 @@ class SocketIOManager():
         self.register_for_audio_data = register_for_audio_data
         self.register_for_brain_control = register_for_brain_control
         self.__hookup_sio()
-    
+
     async def connect_sio(self):
         await self.sio.connect("http://localhost:4000")
         room = "foo"
@@ -117,7 +128,7 @@ class SocketIOManager():
         async def on_rpi_audio(data):
             if self.audio_manager is not None:
                 self.audio_manager.put_play_data(data)
-                
+
 
         @sio.on("audiodata")
         async def on_audio_data(data):
