@@ -6,7 +6,7 @@ throttle = 255//2
 joystick_right = 1020/2
 joystick_down = 1020/2
 joystick_pan_right = 90
-joystick_pan_down = 120
+joystick_pan_down = 90
 def get_joystick_data():
     global throttle
     global joystick_right
@@ -21,7 +21,7 @@ def get_joystick_data():
     JOYSTICK_PAN_RIGHT = "ABS_HAT0X"
     JOYSTICK_PAN_DOWN = "ABS_HAT0Y"
     JOYSTICK_PAN_MULT = 10
-    
+
     if len(events) == 1 and events[0].code == "SYN_REPORT":
         return
 
@@ -39,7 +39,7 @@ def get_joystick_data():
         elif evt.code == JOYSTICK_PAN_DOWN:
             if evt.state == -1 or evt.state == 1:
                 joystick_pan_down += evt.state * JOYSTICK_PAN_MULT
-    
+
     max_motor = 2000
     forward = max_motor - int(joystick_down * max_motor/1020) * 2 # -2000,2000
     right_ratio = min(joystick_right / 1020, 1) # 0,1
@@ -52,11 +52,11 @@ def get_joystick_data():
         "pan_down": joystick_pan_down
     }
     return data
-    
+
 def get_joystick_p2(joystick_queue):
     while True:
         joystick_data = get_joystick_data()
-        joystick_queue.put(joystick_data)
+        joystick_queue.put_nowait(joystick_data)
 
 class JoystickManager():
     def __init__(self) -> None:
@@ -71,4 +71,4 @@ class JoystickManager():
             if temp_data is not None:
                 joystick_data = temp_data
         return joystick_data
-        
+

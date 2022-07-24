@@ -18,7 +18,8 @@ async def main():
     await socketio_manager.connect_sio()
     while True:
         await socketio_manager.tick(0.0001)
-        video_stream_manager.tick()
+        # This is really slow!
+        # video_stream_manager.tick()
 
 
     video_stream_manager.destroy()

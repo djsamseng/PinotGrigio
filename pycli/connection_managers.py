@@ -1,5 +1,6 @@
 import asyncio
 import socketio
+import time
 
 import base64
 import cv2
@@ -88,6 +89,7 @@ class SocketIOManager():
         self.register_for_audio_data = register_for_audio_data
         self.register_for_brain_control = register_for_brain_control
         self.__hookup_sio()
+        self.last_emit = time.time()
 
     async def connect_sio(self):
         await self.sio.connect("http://localhost:4000")
@@ -105,7 +107,9 @@ class SocketIOManager():
         joystick_data = self.joystick_manager.tick()
         if joystick_data is not None:
             print("Emit motor:", joystick_data)
-            await self.sio.emit("motor", joystick_data)
+            if time.time() - self.last_emit > 0.1:
+                await self.sio.emit("motor", joystick_data)
+                self.last_emit = time.time()
         await self.__audio_tick()
 
     def __hookup_sio(self):
